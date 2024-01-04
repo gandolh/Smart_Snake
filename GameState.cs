@@ -14,6 +14,8 @@ namespace SmartSnake
         public Direction Dir { get; private set; }
         public int Score { get; private set; }
         public bool GameOver { get; private set; }
+        
+        private readonly LinkedList<Direction> dirChanges = new LinkedList<Direction>();
 
         //first element is head, last element is tail
         private readonly LinkedList<Position> snakePositions = new LinkedList<Position>();
@@ -52,7 +54,7 @@ namespace SmartSnake
         private void AddFood()
         {
             List<Position> empty = new List<Position>(EmptyPositions());
-            if (empty.Count > 0)
+            if (empty.Count == 0)
             {
                 //TODO: HE/SHE WON THE GAME
                 return;
@@ -89,9 +91,25 @@ namespace SmartSnake
             snakePositions.RemoveLast();
         }
 
+        private Direction GetLastDirection()
+        {
+            if (dirChanges.Count == 0) return Dir;
+            return dirChanges.Last!.Value;
+        }
+
+        private bool CanChangeDirection(Direction newDir)
+        {
+            if (dirChanges.Count == 2)
+                return false;
+
+            Direction lastDir = GetLastDirection();
+            return newDir != lastDir && newDir != lastDir.Opposite();
+        }
+
         public void ChangeDirection(Direction dir)
         {
-            Dir = dir;
+            if(CanChangeDirection(dir))
+                dirChanges.AddLast(dir);
         }
 
         private bool IsOutsideGrid(Position pos)
@@ -112,6 +130,12 @@ namespace SmartSnake
 
         public void Move()
         {
+            if(dirChanges.Count > 0)
+            {
+                Dir = dirChanges.First!.Value;
+                dirChanges.RemoveFirst();
+            }
+
             Position newHeadPos = HeadPosition().Translate(Dir);
             GridValue hit = WillHit(newHeadPos);
 
