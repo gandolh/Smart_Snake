@@ -11,6 +11,7 @@ namespace SmartSnake
         public int Rows { get; }
         public int Cols { get; }
         public GridValue[,] Grid { get; }
+        public Position FoodPosition { get; private set; }
         public Direction Dir { get; private set; }
         public int Score { get; private set; }
         public bool GameOver { get; private set; }
@@ -61,6 +62,7 @@ namespace SmartSnake
             }
 
             Position pos = empty[random.Next(empty.Count)];
+            FoodPosition = pos;
             Grid[pos.Row, pos.Col] = GridValue.Food;
         }
 
@@ -152,6 +154,11 @@ namespace SmartSnake
                 Score++;
                 AddFood();
             }
+        }
+
+        public GridValue GetWhatWillHit(Position newPos)
+        {
+            return WillHit(newPos);
         }
     }
 }
