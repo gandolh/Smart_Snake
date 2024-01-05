@@ -18,7 +18,7 @@
 
         public double DistanceTo(Position other)
         {
-            return ((Row - other.Row) * (Row - other.Row) + (Col - other.Col) * (Col - other.Col));
+            return Math.Sqrt((Row - other.Row) * (Row - other.Row) + (Col - other.Col) * (Col - other.Col));
         }
 
         public override bool Equals(object? obj)

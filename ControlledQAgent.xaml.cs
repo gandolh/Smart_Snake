@@ -142,6 +142,12 @@ namespace SmartSnake
                 SpeedButton.Content = "1x Speed";
             }
         }
+
+        private void LoadButton_Click(object sender, RoutedEventArgs e)
+        {
+            qAgent.Load();
+        }
+
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
             qAgent.Save();

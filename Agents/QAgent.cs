@@ -18,9 +18,13 @@ namespace SmartSnake.Agents
         private readonly QTable qTable;
         private readonly double learningRate = 0.01; 
         private readonly double discountFactor = 0.95; 
-        private double Eps = 0.1;
+        private double Eps = 1.0;
+        private double EpsDiscount = 0.9992;
+        private double MinEps = 0.001;
         private readonly Direction[] directions;
         private static Random random = new Random();
+
+        private int movesWithoutFood = 0;
 
         public GameState gameState { get; private set; }
 
@@ -34,7 +38,7 @@ namespace SmartSnake.Agents
 
             // Initialize Q-table 
             qTable = new();
-           
+            //UpdateEps();
         }
 
    
@@ -75,6 +79,13 @@ namespace SmartSnake.Agents
 
         private void UpdateQValues()
         {
+            movesWithoutFood++;
+            UpdateEps();
+            if (movesWithoutFood > 1000)
+            {
+                gameState.GameOver = true;
+                return;
+            }
             var currentState = GetState(gameState);
             var action = EpsilonGreedyAction(currentState);
             var actionIndex = GetIndexForDir(action);
@@ -101,10 +112,15 @@ namespace SmartSnake.Agents
                     *(reward + discountFactor * maxNextQValue);
         }
 
-        public int GetReward(GameState gameState, Direction action)
+        public double GetReward(GameState gameState, Direction action)
         {
+            double reward = 0;
             GridValue gridValue = gameState.GetGridValue(gameState.HeadPosition().Translate(action));
-            return gridValue switch
+            if (gridValue == GridValue.Food)
+                movesWithoutFood = 0;
+
+
+            reward += gridValue switch
             {
                 GridValue.Snake => -10,
                 GridValue.Outside => -10,
@@ -112,6 +128,8 @@ namespace SmartSnake.Agents
                 GridValue.Empty => -1,
                 _ => -1
             };
+
+            return reward;
 
         }
 
@@ -128,24 +146,6 @@ namespace SmartSnake.Agents
 
         private SnakeState GetState(GameState gameState)
         {
-            #region old state calculation
-            //Position headPosition = gameState.HeadPosition();
-            //Position foodPosition = gameState.FoodPosition;
-
-            ////HashSet<Position> neighbours = GetNeighbours(headPosition, 5);
-            //SnakeState2 state = new()
-            //{
-            //    headState = headPosition.Row * cols + headPosition.Col,
-            //    foodState = foodPosition.Row * cols + foodPosition.Col,
-            //    dirState = GetIndexForDir(gameState.Dir),
-            //    distHeadFood = headPosition.DistanceTo(foodPosition),
-            //    foodIsUp = foodPosition.Row < headPosition.Row,
-            //    foodIsRight = foodPosition.Col > headPosition.Col,
-            //    foodIsDown = foodPosition.Row > headPosition.Row,
-            //    foodIsLeft = foodPosition.Col < headPosition.Col
-            //};
-
-            #endregion
             #region new state calculation
             Position headPosition = gameState.HeadPosition();
             Position foodPosition = gameState.FoodPosition;
@@ -174,37 +174,22 @@ namespace SmartSnake.Agents
             return gridValue == GridValue.Snake || gridValue == GridValue.Outside;
         }
 
-        private HashSet<Position> GetNeighbours(Position headPosition, int depth)
-        {
-            HashSet<Position> neighborPositions = new HashSet<Position>();
-            Queue<Position> queue = new Queue<Position>();
-            queue.Enqueue(headPosition);
-            for (int i = 0; i < depth; i++)
-            {
-                int count = queue.Count;
-                for (int j = 0; j < count; j++)
-                {
-                    Position pos = queue.Dequeue();
-                    neighborPositions.Add(pos);
-                    for (int k = 0; k < directions.Length; k++)
-                    {
-                        Position newPos = pos.Translate(directions[k]);
-                        if (!neighborPositions.Contains(newPos))
-                            queue.Enqueue(newPos);
-                    }
-                }
-            }
-            return neighborPositions;
-        }
-
         internal void ResetGameState()
         {
             gameState = new GameState(rows, cols);
+            movesWithoutFood = 0;
+            //UpdateEps();
         }
 
         internal void Save()
         {
-            throw new NotImplementedException();
+            SaveModule.WriteQTable($"{DateTime.UtcNow.ToString("dd-MM-yyyy_hh-mm")}.txt", qTable);
+        }
+
+        internal void Load()
+        {
+            string modelName = "05-01-2024_08-50.txt";
+            SaveModule.ReadQTable(modelName, qTable);
         }
 
         public Direction GetPrediction()
@@ -212,5 +197,9 @@ namespace SmartSnake.Agents
             throw new NotImplementedException();
         }
 
+        private void UpdateEps()
+        {
+            Eps = Math.Max(Eps * EpsDiscount, MinEps);
+        }
     }
 }

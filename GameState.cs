@@ -11,7 +11,7 @@ namespace SmartSnake
         public Position FoodPosition { get; private set; }
         public Direction Dir { get; private set; }
         public int Score { get; private set; }
-        public bool GameOver { get; private set; }
+        public bool GameOver { get;  set; }
 
         private readonly LinkedList<Direction> dirChanges = new LinkedList<Direction>();
 

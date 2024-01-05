@@ -35,6 +35,12 @@
              Margin="10"
              Click="SaveButton_Click" Width="172"/>
 
+                <Button x:Name="LoadButton"
+ Content="Load"
+ FontSize="16"
+ Margin="10"
+ Click="LoadButton_Click" Width="172"/>
+
 
                 <TextBlock x:Name="ScoreText"
             Text="Score: 0"

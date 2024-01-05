@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SmartSnake
 {
-    internal class SnakeState : IEquatable<SnakeState?>
+    public class SnakeState : IEquatable<SnakeState?>
     {
         public bool dirIsLeft { get; set; }
         public bool dirIsRight { get; set; }
