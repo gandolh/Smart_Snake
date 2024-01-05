@@ -17,7 +17,7 @@ namespace SmartSnake
 
         //first element is head, last element is tail
         private readonly LinkedList<Position> snakePositions = new LinkedList<Position>();
-        private readonly Random random = new Random();
+        private static readonly Random random = new Random(69420);
 
         public GameState(int rows, int cols)
         {
@@ -25,7 +25,6 @@ namespace SmartSnake
             Cols = cols;
             Grid = new GridValue[rows, cols];
             Dir = Direction.Right;
-
             AddSnake();
             AddFood();
 

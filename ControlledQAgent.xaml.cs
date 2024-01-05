@@ -25,11 +25,17 @@ namespace SmartSnake
             {Direction.Left, 270 },
         };
 
+        private const int MillisecondsDelay1X = 100;
+        private const int MillisecondsDelay10X = 1;
+
+
         private readonly int rows = 15, cols = 15;
         private readonly Image[,] gridImages;
-        private bool gameRunning;
 
         private QAgent qAgent;
+        private int maxScore;
+        private long maxScoreEpoch;
+        private bool DrawEnabled = true;
 
         public ControlledQAgent()
         {
@@ -46,15 +52,21 @@ namespace SmartSnake
 
         private async Task RunGame()
         {
+            Overlay.Visibility = Visibility.Hidden;
+            qAgent.SnakeSpeed = MillisecondsDelay10X;
             long epoch = 0;
             while (true)
             {
                 EppochText.Text = $"Epoch: {epoch++}";
-                //await ShowCountDown();
-                Draw();
-                Overlay.Visibility = Visibility.Hidden;
                 await GameLoop();
-                //await ShowGameOver();
+                if(qAgent.gameState.Score > maxScore)
+                {
+                    MaxScoreText.Text = $"Max Score: {maxScore}";
+                    MaxScoreEpochText.Text = $"Max Score Epoch: {maxScoreEpoch}";
+                    maxScore = qAgent.gameState.Score;
+                    maxScoreEpoch = epoch - 1;
+                }
+                
                 qAgent.ResetGameState();
             }
         }
@@ -64,7 +76,11 @@ namespace SmartSnake
             while (!qAgent.gameState.GameOver)
             {
                 await qAgent.MakeMove();
-                Draw();
+                if (DrawEnabled)
+                {
+                    ScoreText.Text = $"Score: {qAgent.gameState.Score}";
+                    Draw();
+                }
             }
         }
 
@@ -88,14 +104,11 @@ namespace SmartSnake
                 }
             return images;
         }
-
         private void Draw()
         {
             DrawGrid();
             DrawSnakeHead();
-            ScoreText.Text = $"Score: {qAgent.gameState.Score}";
         }
-
         private void DrawGrid()
         {
             for (int r = 0; r < rows; r++)
@@ -107,7 +120,6 @@ namespace SmartSnake
 
                 }
         }
-
         private void DrawSnakeHead()
         {
             Position headPos = qAgent.gameState.HeadPosition();
@@ -117,35 +129,23 @@ namespace SmartSnake
             int rotation = dirToRotation[qAgent.gameState.Dir];
             image.RenderTransform = new RotateTransform(rotation);
         }
-
-        private async Task DrawDeadSnake()
+        private void SpeedButton_Click(object sender, RoutedEventArgs e)
         {
-            List<Position> positions = new List<Position>(qAgent.gameState.SnakePositions());
-
-            for (int i = 0; i < positions.Count; i++)
+            if(qAgent.SnakeSpeed == MillisecondsDelay1X)
             {
-                Position pos = positions[i];
-                ImageSource source = (i == 0) ? Images.DeadHead : Images.DeadBody;
-                gridImages[pos.Row, pos.Col].Source = source;
-                await Task.Delay(50);
+                qAgent.SnakeSpeed = MillisecondsDelay10X;
+                SpeedButton.Content = "10x Speed";
+            }
+            else
+            {
+                qAgent.SnakeSpeed = MillisecondsDelay1X;
+                SpeedButton.Content = "1x Speed";
             }
         }
-
-        private async Task ShowCountDown()
+        private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
-            for (int i = 3; i >= 1; i--)
-            {
-                OverlayText.Text = i.ToString();
-                await Task.Delay(500);
-            }
+            qAgent.Save();
         }
-
-        private async Task ShowGameOver()
-        {
-            await DrawDeadSnake();
-            await Task.Delay(1000);
-            Overlay.Visibility = Visibility.Visible;
-            OverlayText.Text = "PRESS ANY KEY TO START";
-        }
+     
     }
 }

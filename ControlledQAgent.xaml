@@ -16,25 +16,48 @@
         >
     <Viewbox>
         <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-            <StackPanel Orientation="Horizontal" Grid.Row="0" 
-                HorizontalAlignment="Center" 
-                VerticalAlignment="Center">
+            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                <Button x:Name="SpeedButton"
+                        
+             Content="1x Speed"
+             FontSize="16"
+             Margin="10"
+             Click="SpeedButton_Click" Width="172"/>
+
+                <Button x:Name="SaveButton"
+             Content="Save"
+             FontSize="16"
+             Margin="10"
+             Click="SaveButton_Click" Width="172"/>
+
+
                 <TextBlock x:Name="ScoreText"
-                    Text="Score: 0"
-                    FontSize="22"
-                    Margin="10"/>
+            Text="Score: 0"
+            FontSize="22"
+            Margin="10"/>
+
                 <TextBlock x:Name="EppochText"
-                    Text="Epoch: 0"
-                    FontSize="22"
-                    Margin="10"/>
+            Text="Epoch: 0"
+            FontSize="22"
+            Margin="10"/>
+
+                <TextBlock x:Name="MaxScoreText"
+                Text="Max Score: 0"
+                FontSize="16"
+                Margin="10"/>
+
+                <TextBlock x:Name="MaxScoreEpochText"
+                Text="Max Score Epoch: 0"
+                FontSize="16"
+                Margin="10"/>
             </StackPanel>
             <Border x:Name="GridBorder" 
-             Grid.Row="1"
+                        Grid.Column="1"
              BorderBrush="{StaticResource GridLineColor}"
              BorderThickness="1.5"
              HorizontalAlignment="Center"
@@ -49,9 +72,8 @@
              RenderOptions.BitmapScalingMode="HighQuality">
                 </UniformGrid>
             </Border>
-
             <Border x:Name="Overlay"
-                    Grid.Row="1"
+                    Grid.Column="1"
                     Background="{StaticResource OverlayColor}"
                     Width="{Binding Path=ActualWidth, ElementName=GridBorder}"
                     Height="{Binding Path=ActualHeight, ElementName=GridBorder}"
@@ -63,7 +85,7 @@
                            HorizontalAlignment="Center"
                            VerticalAlignment="Center"
                            TextWrapping="Wrap">
-                       
+
                 </TextBlock>
             </Border>
         </Grid>

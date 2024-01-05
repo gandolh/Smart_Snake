@@ -8,7 +8,7 @@ namespace SmartSnake.Agents
     internal class QAgent : IAgent
     {
         private const int MaxPossibleDistinctStates = 1_000_000;
-        private const int MillisecondsDelay = 10;
+        public int SnakeSpeed = 0;
         private readonly int cols;
         private readonly int rows;
         private readonly double[,] QTable;
@@ -85,7 +85,7 @@ namespace SmartSnake.Agents
         {
             Direction predictedAction = GetPrediction();
             gameState.ChangeDirection(predictedAction);
-            await Task.Delay(MillisecondsDelay);
+            await Task.Delay(SnakeSpeed);
             gameState.Move();
 
             // Perform Q-learning update after the move
@@ -101,7 +101,6 @@ namespace SmartSnake.Agents
             int action = GetIndexForDir(gameState.Dir);
             int newState = GetState(tmpGameState);
             double reward = GetReward(tmpGameState);
-            bool done = tmpGameState.GameOver;
 
             double currentQValue = QTable[currentState, action];
 
@@ -115,9 +114,8 @@ namespace SmartSnake.Agents
             }
 
             // Bellman equation update for Q-value
-            // or (1 - learningRate ) * currentQValue + learningRate* (reward + discountFactor*maxNextQValue);
             double updatedQValue = currentQValue + learningRate * (reward
-                + (done ? 0 : discountFactor * maxNextQValue) - currentQValue);
+                + (discountFactor * maxNextQValue) - currentQValue);
 
             QTable[currentState, action] = updatedQValue;
         }
@@ -129,8 +127,8 @@ namespace SmartSnake.Agents
             {
                 GridValue.Snake => -10,
                 GridValue.Outside => -10,
-                GridValue.Food => 20,
-                GridValue.Empty => -1,
+                GridValue.Food => 1,
+                GridValue.Empty => 0,
                 _ => -1
             };
         }
@@ -161,7 +159,7 @@ namespace SmartSnake.Agents
             bool foodIsLeft = foodPosition.Col < headPosition.Col;
 
             int hashCodeEnvironment = 5;
-            HashSet<Position> neighbours = GetNeighbours(headPosition, 3);
+            HashSet<Position> neighbours = GetNeighbours(headPosition, 5);
             foreach (Position position in neighbours)
             {
                 hashCodeEnvironment = HashCode.Combine(hashCodeEnvironment, position.GetHashCode());
@@ -211,6 +209,11 @@ namespace SmartSnake.Agents
         internal void ResetGameState()
         {
             gameState = new GameState(rows, cols);
+        }
+
+        internal void Save()
+        {
+            throw new NotImplementedException();
         }
     }
 }
