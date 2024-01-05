@@ -32,7 +32,7 @@ namespace SmartSnake.Agents
             gameState = new GameState(rows, cols);
             directions = [Direction.Up, Direction.Right, Direction.Down, Direction.Left];
 
-            // Initialize Q-table with default values (e.g., zeros)
+            // Initialize Q-table 
             qTable = new();
            
         }
@@ -131,35 +131,22 @@ namespace SmartSnake.Agents
             #region old state calculation
             //Position headPosition = gameState.HeadPosition();
             //Position foodPosition = gameState.FoodPosition;
-            //int headState = headPosition.Row * cols + headPosition.Col;
-            //int foodState = foodPosition.Row * cols + foodPosition.Col;
-            //int dirState = GetIndexForDir(gameState.Dir);
-            //double distHeadFood = headPosition.DistanceTo(foodPosition);
-            //// booleans if foodPosition is up, right, down or left to headPosition.
-            //bool foodIsUp = foodPosition.Row < headPosition.Row;
-            //bool foodIsRight = foodPosition.Col > headPosition.Col;
-            //bool foodIsDown = foodPosition.Row > headPosition.Row;
-            //bool foodIsLeft = foodPosition.Col < headPosition.Col;
 
-            //int hashCodeEnvironment = 5;
-            //HashSet<Position> neighbours = GetNeighbours(headPosition, 5);
-            //foreach (Position position in neighbours)
+            ////HashSet<Position> neighbours = GetNeighbours(headPosition, 5);
+            //SnakeState2 state = new()
             //{
-            //    hashCodeEnvironment = HashCode.Combine(hashCodeEnvironment, position.GetHashCode());
-            //}
+            //    headState = headPosition.Row * cols + headPosition.Col,
+            //    foodState = foodPosition.Row * cols + foodPosition.Col,
+            //    dirState = GetIndexForDir(gameState.Dir),
+            //    distHeadFood = headPosition.DistanceTo(foodPosition),
+            //    foodIsUp = foodPosition.Row < headPosition.Row,
+            //    foodIsRight = foodPosition.Col > headPosition.Col,
+            //    foodIsDown = foodPosition.Row > headPosition.Row,
+            //    foodIsLeft = foodPosition.Col < headPosition.Col
+            //};
 
-            //int resultHashCode = 12;
-            //resultHashCode = HashCode.Combine(resultHashCode, headState);
-            //resultHashCode = HashCode.Combine(resultHashCode, foodState);
-            //resultHashCode = HashCode.Combine(resultHashCode, dirState);
-            //resultHashCode = HashCode.Combine(resultHashCode, distHeadFood);
-            //resultHashCode = HashCode.Combine(resultHashCode, foodIsUp);
-            //resultHashCode = HashCode.Combine(resultHashCode, foodIsRight);
-            //resultHashCode = HashCode.Combine(resultHashCode, foodIsDown);
-            //resultHashCode = HashCode.Combine(resultHashCode, foodIsLeft);
-            //resultHashCode = HashCode.Combine(resultHashCode, hashCodeEnvironment);
             #endregion
-
+            #region new state calculation
             Position headPosition = gameState.HeadPosition();
             Position foodPosition = gameState.FoodPosition;
 
@@ -178,6 +165,7 @@ namespace SmartSnake.Agents
                 dangerIsUp = IsDanger(gameState.GetGridValue(headPosition.Translate(Direction.Up))),
                 dangerIsDown = IsDanger(gameState.GetGridValue(headPosition.Translate(Direction.Down)))
             };
+            #endregion
             return state;
         }
 
