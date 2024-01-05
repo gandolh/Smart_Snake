@@ -1,20 +1,26 @@
-﻿using System;
+﻿using Microsoft.VisualBasic;
+using System;
 using System.Collections.Generic;
 using System.Net.Http.Headers;
+using System.Security.RightsManagement;
 using System.Threading.Tasks;
 
 namespace SmartSnake.Agents
 {
     internal class QAgent : IAgent
     {
-        private const int MaxPossibleDistinctStates = 1_000_000;
+
         public int SnakeSpeed = 0;
         private readonly int cols;
         private readonly int rows;
-        private readonly double[,] QTable;
-        private readonly double learningRate = 0.1; // Learning rate
-        private readonly double discountFactor = 0.9; // Discount factor
+
+        // 4 actions: up, right, down, left
+        private readonly QTable qTable;
+        private readonly double learningRate = 0.01; 
+        private readonly double discountFactor = 0.95; 
+        private double Eps = 0.1;
         private readonly Direction[] directions;
+        private static Random random = new Random();
 
         public GameState gameState { get; private set; }
 
@@ -27,43 +33,23 @@ namespace SmartSnake.Agents
             directions = [Direction.Up, Direction.Right, Direction.Down, Direction.Left];
 
             // Initialize Q-table with default values (e.g., zeros)
-            QTable = new double[MaxPossibleDistinctStates, 4]; // 4 actions: up, right, down, left
+            qTable = new();
+           
         }
 
-        public Direction GetPrediction()
+   
+
+
+        private Direction EpsilonGreedyAction(SnakeState state)
         {
-            // Perform epsilon-greedy action selection
-            Direction action = EpsilonGreedyAction(GetState(gameState));
-
-            return action;
-        }
-
-
-
-        private Direction EpsilonGreedyAction(int state)
-        {
-            Random random = new Random();
-            double epsilon = 0.1; // Exploration rate (probability of exploration)
-
-            if (random.NextDouble() < epsilon)
+            if (random.NextDouble() < Eps)
             {
-                // Exploration: Choose a random action
-                return GetRandomAction();
+                return directions[random.Next(directions.Length)];
             }
-            else
-            {
-                // Exploitation: Choose the best action based on Q-values
-                return GetBestAction(state);
-            }
+            return GetBestAction(state);
         }
 
-        private Direction GetRandomAction()
-        {
-            Random random = new Random();
-            return directions[random.Next(directions.Length)];
-        }
-
-        private Direction GetBestAction(int state)
+        private Direction GetBestAction(SnakeState state)
         {
             double maxQValue = double.MinValue;
             int bestAction = 0;
@@ -71,9 +57,9 @@ namespace SmartSnake.Agents
             // Find the action with the highest Q-value for the given state
             for (int action = 0; action < 4; action++)
             {
-                if (QTable[state, action] > maxQValue)
+                if (qTable[state,action] > maxQValue)
                 {
-                    maxQValue = QTable[state, action];
+                    maxQValue = qTable[state,action];
                     bestAction = action;
                 }
             }
@@ -83,54 +69,49 @@ namespace SmartSnake.Agents
 
         public async Task MakeMove()
         {
-            Direction predictedAction = GetPrediction();
-            gameState.ChangeDirection(predictedAction);
             await Task.Delay(SnakeSpeed);
-            gameState.Move();
-
-            // Perform Q-learning update after the move
             UpdateQValues();
         }
 
         private void UpdateQValues()
         {
-            var tmpGameState = new GameState(gameState);
-            tmpGameState.Move();
+            var currentState = GetState(gameState);
+            var action = EpsilonGreedyAction(currentState);
+            var actionIndex = GetIndexForDir(action);
+            var reward = GetReward(gameState, action);
 
-            int currentState = GetState(gameState);
-            int action = GetIndexForDir(gameState.Dir);
-            int newState = GetState(tmpGameState);
-            double reward = GetReward(tmpGameState);
-
-            double currentQValue = QTable[currentState, action];
+            gameState.ChangeDirection(action);
+            gameState.Move();
+            var newState = GetState(gameState);
 
             double maxNextQValue = double.MinValue;
+
+
             for (int nextAction = 0; nextAction < 4; nextAction++)
             {
-                if (QTable[newState, nextAction] > maxNextQValue)
+                if (qTable[newState,nextAction] > maxNextQValue)
                 {
-                    maxNextQValue = QTable[newState, nextAction];
+                    maxNextQValue = qTable[newState,nextAction];   
                 }
             }
 
-            // Bellman equation update for Q-value
-            double updatedQValue = currentQValue + learningRate * (reward
-                + (discountFactor * maxNextQValue) - currentQValue);
-
-            QTable[currentState, action] = updatedQValue;
+            qTable[currentState, actionIndex] = (1 - learningRate) 
+                    * qTable[currentState, actionIndex] + learningRate
+                    *(reward + discountFactor * maxNextQValue);
         }
 
-        public int GetReward(GameState gameState)
+        public int GetReward(GameState gameState, Direction action)
         {
-            GridValue gridValue = gameState.GetWhatWillHit(gameState.HeadPosition());
+            GridValue gridValue = gameState.GetGridValue(gameState.HeadPosition().Translate(action));
             return gridValue switch
             {
                 GridValue.Snake => -10,
                 GridValue.Outside => -10,
-                GridValue.Food => 1,
-                GridValue.Empty => 0,
+                GridValue.Food => 100,
+                GridValue.Empty => -1,
                 _ => -1
             };
+
         }
 
         private int GetIndexForDir(Direction dir)
@@ -144,43 +125,64 @@ namespace SmartSnake.Agents
             throw new NotImplementedException();
         }
 
-        private int GetState(GameState gameState)
+        private SnakeState GetState(GameState gameState)
         {
+            #region old state calculation
+            //Position headPosition = gameState.HeadPosition();
+            //Position foodPosition = gameState.FoodPosition;
+            //int headState = headPosition.Row * cols + headPosition.Col;
+            //int foodState = foodPosition.Row * cols + foodPosition.Col;
+            //int dirState = GetIndexForDir(gameState.Dir);
+            //double distHeadFood = headPosition.DistanceTo(foodPosition);
+            //// booleans if foodPosition is up, right, down or left to headPosition.
+            //bool foodIsUp = foodPosition.Row < headPosition.Row;
+            //bool foodIsRight = foodPosition.Col > headPosition.Col;
+            //bool foodIsDown = foodPosition.Row > headPosition.Row;
+            //bool foodIsLeft = foodPosition.Col < headPosition.Col;
+
+            //int hashCodeEnvironment = 5;
+            //HashSet<Position> neighbours = GetNeighbours(headPosition, 5);
+            //foreach (Position position in neighbours)
+            //{
+            //    hashCodeEnvironment = HashCode.Combine(hashCodeEnvironment, position.GetHashCode());
+            //}
+
+            //int resultHashCode = 12;
+            //resultHashCode = HashCode.Combine(resultHashCode, headState);
+            //resultHashCode = HashCode.Combine(resultHashCode, foodState);
+            //resultHashCode = HashCode.Combine(resultHashCode, dirState);
+            //resultHashCode = HashCode.Combine(resultHashCode, distHeadFood);
+            //resultHashCode = HashCode.Combine(resultHashCode, foodIsUp);
+            //resultHashCode = HashCode.Combine(resultHashCode, foodIsRight);
+            //resultHashCode = HashCode.Combine(resultHashCode, foodIsDown);
+            //resultHashCode = HashCode.Combine(resultHashCode, foodIsLeft);
+            //resultHashCode = HashCode.Combine(resultHashCode, hashCodeEnvironment);
+            #endregion
+
             Position headPosition = gameState.HeadPosition();
             Position foodPosition = gameState.FoodPosition;
-            int headState = headPosition.Row * cols + headPosition.Col;
-            int foodState = foodPosition.Row * cols + foodPosition.Col;
-            int dirState = GetIndexForDir(gameState.Dir);
-            double distHeadFood = headPosition.DistanceTo(foodPosition);
-            // booleans if foodPosition is up, right, down or left to headPosition.
-            bool foodIsUp = foodPosition.Row < headPosition.Row;
-            bool foodIsRight = foodPosition.Col > headPosition.Col;
-            bool foodIsDown = foodPosition.Row > headPosition.Row;
-            bool foodIsLeft = foodPosition.Col < headPosition.Col;
 
-            int hashCodeEnvironment = 5;
-            HashSet<Position> neighbours = GetNeighbours(headPosition, 5);
-            foreach (Position position in neighbours)
+            SnakeState state = new SnakeState()
             {
-                hashCodeEnvironment = HashCode.Combine(hashCodeEnvironment, position.GetHashCode());
-            }
+                dirIsLeft = gameState.Dir == Direction.Left,
+                dirIsRight = gameState.Dir == Direction.Right,
+                dirIsUp = gameState.Dir == Direction.Up,
+                dirIsDown = gameState.Dir == Direction.Down,
+                foodIsUp = foodPosition.Row < headPosition.Row,
+                foodIsRight = foodPosition.Col > headPosition.Col,
+                foodIsDown = foodPosition.Row > headPosition.Row,
+                foodIsLeft = foodPosition.Col < headPosition.Col,
+                dangerIsLeft = IsDanger(gameState.GetGridValue(headPosition.Translate(Direction.Left))),
+                dangerIsRight = IsDanger(gameState.GetGridValue(headPosition.Translate(Direction.Right))),
+                dangerIsUp = IsDanger(gameState.GetGridValue(headPosition.Translate(Direction.Up))),
+                dangerIsDown = IsDanger(gameState.GetGridValue(headPosition.Translate(Direction.Down)))
+            };
+            return state;
+        }
 
-            int resultHashCode = 12;
-            resultHashCode = HashCode.Combine(resultHashCode, headState);
-            resultHashCode = HashCode.Combine(resultHashCode, foodState);
-            resultHashCode = HashCode.Combine(resultHashCode, dirState);
-            resultHashCode = HashCode.Combine(resultHashCode, distHeadFood);
-            resultHashCode = HashCode.Combine(resultHashCode, foodIsUp);
-            resultHashCode = HashCode.Combine(resultHashCode, foodIsRight);
-            resultHashCode = HashCode.Combine(resultHashCode, foodIsDown);
-            resultHashCode = HashCode.Combine(resultHashCode, foodIsLeft);
-            resultHashCode = HashCode.Combine(resultHashCode, hashCodeEnvironment);
-
-
-            // map the value
-            double scaledValue = (1D * resultHashCode - int.MinValue) / (1D * int.MaxValue - int.MinValue) * MaxPossibleDistinctStates;
-            resultHashCode = (int)Math.Clamp(scaledValue, 0, MaxPossibleDistinctStates);
-            return resultHashCode;
+        private bool IsDanger(GridValue gridValue)
+        {
+            return gridValue == GridValue.Snake || gridValue == GridValue.Outside;
         }
 
         private HashSet<Position> GetNeighbours(Position headPosition, int depth)
@@ -215,5 +217,11 @@ namespace SmartSnake.Agents
         {
             throw new NotImplementedException();
         }
+
+        public Direction GetPrediction()
+        {
+            throw new NotImplementedException();
+        }
+
     }
 }

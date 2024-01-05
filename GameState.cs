@@ -154,7 +154,7 @@ namespace SmartSnake
 
 
         #region For Agents
-        public GridValue GetWhatWillHit(Position newPos)
+        public GridValue GetGridValue(Position newPos)
         {
             return WillHit(newPos);
         }

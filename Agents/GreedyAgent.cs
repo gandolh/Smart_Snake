@@ -36,7 +36,7 @@ namespace SmartSnake.Agents
 
         private bool IsValidMove(Position newPos, Direction dir)
         {
-            GridValue gridValue = gameState.GetWhatWillHit(newPos);
+            GridValue gridValue = gameState.GetGridValue(newPos);
             return dir != gameState.Dir.Opposite() && gridValue != GridValue.Outside && gridValue != GridValue.Snake;
         }
 

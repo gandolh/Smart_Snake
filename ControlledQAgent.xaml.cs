@@ -61,10 +61,10 @@ namespace SmartSnake
                 await GameLoop();
                 if(qAgent.gameState.Score > maxScore)
                 {
-                    MaxScoreText.Text = $"Max Score: {maxScore}";
-                    MaxScoreEpochText.Text = $"Max Score Epoch: {maxScoreEpoch}";
                     maxScore = qAgent.gameState.Score;
                     maxScoreEpoch = epoch - 1;
+                    MaxScoreText.Text = $"Max Score: {maxScore}";
+                    MaxScoreEpochText.Text = $"Max Score Epoch: {maxScoreEpoch}";
                 }
                 
                 qAgent.ResetGameState();
