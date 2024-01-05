@@ -95,6 +95,7 @@ namespace SmartSnake.Agents
                 }
             }
 
+            // bellman equation
             qTable[currentState, actionIndex] = (1 - learningRate) 
                     * qTable[currentState, actionIndex] + learningRate
                     *(reward + discountFactor * maxNextQValue);

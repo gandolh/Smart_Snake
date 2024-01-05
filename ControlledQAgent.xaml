@@ -24,7 +24,7 @@
             <StackPanel Grid.Column="0" VerticalAlignment="Center">
                 <Button x:Name="SpeedButton"
                         
-             Content="1x Speed"
+             Content="10x Speed"
              FontSize="16"
              Margin="10"
              Click="SpeedButton_Click" Width="172"/>
