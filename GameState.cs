@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.CodeDom;
+using System.Windows.Controls;
 
 namespace SmartSnake
 {
@@ -15,7 +12,7 @@ namespace SmartSnake
         public Direction Dir { get; private set; }
         public int Score { get; private set; }
         public bool GameOver { get; private set; }
-        
+
         private readonly LinkedList<Direction> dirChanges = new LinkedList<Direction>();
 
         //first element is head, last element is tail
@@ -110,7 +107,7 @@ namespace SmartSnake
 
         public void ChangeDirection(Direction dir)
         {
-            if(CanChangeDirection(dir))
+            if (CanChangeDirection(dir))
                 dirChanges.AddLast(dir);
         }
 
@@ -132,7 +129,7 @@ namespace SmartSnake
 
         public void Move()
         {
-            if(dirChanges.Count > 0)
+            if (dirChanges.Count > 0)
             {
                 Dir = dirChanges.First!.Value;
                 dirChanges.RemoveFirst();
@@ -156,9 +153,28 @@ namespace SmartSnake
             }
         }
 
+
+        #region For Agents
         public GridValue GetWhatWillHit(Position newPos)
         {
             return WillHit(newPos);
         }
+
+        public GameState(GameState other)
+        {
+            Rows = other.Rows;
+            Cols = other.Cols;
+            Grid = other.Grid;
+            FoodPosition = other.FoodPosition;
+            Dir = other.Dir;
+            Score = other.Score;
+            GameOver = other.GameOver;
+            dirChanges = other.dirChanges;
+            snakePositions = other.snakePositions;
+        }
+
+        
+
+        #endregion
     }
 }

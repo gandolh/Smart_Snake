@@ -1,24 +1,14 @@
 ﻿using SmartSnake.Agents;
-using System.ComponentModel.Design;
-using System.Formats.Asn1;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Ribbon;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace SmartSnake
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class AgentControlled : Window
+    public partial class ControlledQAgent : Window
     {
         private readonly Dictionary<GridValue, ImageSource> gridValToImage = new()
         {
@@ -32,55 +22,54 @@ namespace SmartSnake
             {Direction.Up, 0 },
             {Direction.Right, 90 },
             {Direction.Down, 180 },
-            {Direction.Left, 270 }, 
+            {Direction.Left, 270 },
         };
 
         private readonly int rows = 15, cols = 15;
         private readonly Image[,] gridImages;
         private bool gameRunning;
 
-        private GreedyAgent greedyAgent;
-        private RandomAgent randomAgent;
-        private IAgent selectedAgent;
-        private readonly GameState gameState;
+        private QAgent qAgent;
 
-        public AgentControlled()
+        public ControlledQAgent()
         {
             InitializeComponent();
             gridImages = SetupGrid();
-            greedyAgent = new GreedyAgent(rows, cols);
-            randomAgent = new RandomAgent(rows, cols);
-            selectedAgent = greedyAgent;
-            gameState = selectedAgent.gameState;
+            qAgent = new QAgent(rows, cols);
         }
 
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            await ShowCountDown();
-            gameRunning = true;
             await RunGame();
-            gameRunning = false;
         }
 
 
         private async Task RunGame()
         {
-            Draw();
-            Overlay.Visibility = Visibility.Hidden;
-            await GameLoop();
-            await ShowGameOver();
+            long epoch = 0;
+            while (true)
+            {
+                EppochText.Text = $"Epoch: {epoch++}";
+                //await ShowCountDown();
+                Draw();
+                Overlay.Visibility = Visibility.Hidden;
+                await GameLoop();
+                //await ShowGameOver();
+                qAgent.ResetGameState();
+            }
         }
 
         private async Task GameLoop()
         {
-            while (!gameState.GameOver)
+            while (!qAgent.gameState.GameOver)
             {
-                await selectedAgent.MakeMove();
+                await qAgent.MakeMove();
                 Draw();
             }
         }
 
-        private Image[,] SetupGrid() {
+        private Image[,] SetupGrid()
+        {
             Image[,] images = new Image[rows, cols];
             GameGrid.Rows = rows;
             GameGrid.Columns = cols;
@@ -94,7 +83,7 @@ namespace SmartSnake
                         Source = Images.Empty,
                         RenderTransformOrigin = new Point(0.5, 0.5)
                     };
-                    images[r,c] = image;
+                    images[r, c] = image;
                     GameGrid.Children.Add(image);
                 }
             return images;
@@ -104,7 +93,7 @@ namespace SmartSnake
         {
             DrawGrid();
             DrawSnakeHead();
-            ScoreText.Text = $"Score: {gameState.Score}";
+            ScoreText.Text = $"Score: {qAgent.gameState.Score}";
         }
 
         private void DrawGrid()
@@ -112,7 +101,7 @@ namespace SmartSnake
             for (int r = 0; r < rows; r++)
                 for (int c = 0; c < cols; c++)
                 {
-                    GridValue gridVal = gameState.Grid[r, c];
+                    GridValue gridVal = qAgent.gameState.Grid[r, c];
                     gridImages[r, c].Source = gridValToImage[gridVal];
                     gridImages[r, c].RenderTransform = Transform.Identity;
 
@@ -121,17 +110,17 @@ namespace SmartSnake
 
         private void DrawSnakeHead()
         {
-            Position headPos = gameState.HeadPosition();
+            Position headPos = qAgent.gameState.HeadPosition();
             Image image = gridImages[headPos.Row, headPos.Col];
             image.Source = Images.Head;
 
-            int rotation = dirToRotation[gameState.Dir];
+            int rotation = dirToRotation[qAgent.gameState.Dir];
             image.RenderTransform = new RotateTransform(rotation);
         }
 
         private async Task DrawDeadSnake()
         {
-            List<Position> positions = new List<Position>(gameState.SnakePositions());
+            List<Position> positions = new List<Position>(qAgent.gameState.SnakePositions());
 
             for (int i = 0; i < positions.Count; i++)
             {

@@ -1,6 +1,4 @@
-﻿using System.Windows.Documents;
-
-namespace SmartSnake
+﻿namespace SmartSnake
 {
     public class Position
     {
