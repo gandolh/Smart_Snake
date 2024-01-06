@@ -1,4 +1,6 @@
 ﻿
+using System.Windows.Automation.Text;
+
 namespace SmartSnake
 {
     public class Direction
@@ -7,6 +9,8 @@ namespace SmartSnake
         public readonly static Direction Right = new Direction(0,1);
         public readonly static Direction Up = new Direction(-1,0);
         public readonly static Direction Down = new Direction(1, 0);
+        public static readonly List<Direction> ClockWiseDirection = [Up, Right, Down, Left];
+
 
         public int RowOffset {get;set;}
         public int ColOffset {get;set;}
@@ -19,6 +23,18 @@ namespace SmartSnake
         public Direction Opposite()
         {
             return new Direction(-RowOffset, -ColOffset);
+        }
+
+        internal Direction RotateLeft()
+        {
+            int indexOf = ClockWiseDirection.IndexOf(this);
+            return ClockWiseDirection[(4 + indexOf - 1) % 4];
+        }
+
+        internal Direction RotateRight()
+        {
+            int indexOf = ClockWiseDirection.IndexOf(this);
+            return ClockWiseDirection[(indexOf + 1) % 4];
         }
 
         public override bool Equals(object? obj)

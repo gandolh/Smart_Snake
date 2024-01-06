@@ -1,11 +1,4 @@
-﻿using Microsoft.VisualBasic;
-using System;
-using System.Collections.Generic;
-using System.Net.Http.Headers;
-using System.Security.RightsManagement;
-using System.Threading.Tasks;
-
-namespace SmartSnake.Agents
+﻿namespace SmartSnake.Agents
 {
     internal class QAgent : IAgent
     {
